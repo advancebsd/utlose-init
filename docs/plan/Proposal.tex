@@ -1,10 +1,115 @@
 \documentclass{article}
 
 \usepackage[margin=0.75in]{geometry}
+\usepackage[style=numeric-comp, sorting=none, backend=biber, doi=false, isbn=false, url=false]{biblatex}
+\usepackage{minted}
+\setminted{autogobble}
+\newcommand*{\bibtitle}{Bibliography}
+
+\addbibresource{Proposal.bib}
 
 \title{Init System Proposal\\ \large{For all posix complient systems}}
 \author{James Hobson and Michael Reim}
 
 \begin{document}
 \maketitle
+
+\tableofcontents
+
+\section{Motivations}
+Proposing new init systems and service managament systems in 2021 is suprisingly still a taboo
+topic. The space has seen little innovation since the contriversially wide adoption of systemd
+in linux and I think, rather understandably, no one wants second init world war. But the
+war never really ended; more systemd gaind control of vast amounts of territory and a cease
+fire was put in place. There still exists a minority who feel oppressed and jumped over to
+the BSDs to escape the creep of systemd. But this leaves the BSDs in a situation where,
+if they wanted to innovate their init system and service management, they would have
+to tred carefully to avoid emoting any PTSD in the refugees they got from linux. These
+small open source communities are too small to fragement and so an unspoken policy of 
+init-system complacency has been adopted.
+
+But things are changing. DragonflyBSD has gone from a relativly unknown operating
+system to one that has started to out perform linux in benchmarks\footfullcite{dfbsd-phoronix}.
+One thing that systemd has shown us is that service management is key to speed and
+resource management and so it may be time to take another look at init systems and servie
+management so that the BSDs have an up-to-date answer to the systemd problem and
+so that systemd has competition in it's domain.
+
+\section{Other Software in the Domain}
+\subsection{Old Unix RC}
+\nocite{unix-ii}
+The old unix RC was extreamly primitive. A benifit to this approach is that it's very stable,
+but the completely lack of service management caused issues. Some software, such as
+appache HTTPd, came with management shell scripts\footfullcite{app-service}, but
+for those that didn't, your only option was to send the correct signal to the process
+via \texttt{kill}. For admins unfamiliar with this kind of management it's in fact easier to
+restart the whole machine after some service died than to figure out how to start it again!
+
+\subsection{BSD rc}
+BSD innovated by adding \texttt{rc.local}. This seporated system init and user specified
+init, thus removing the anxiety sysadmins would face each time they needed to update the
+system. Apart from that change, it was pretty much the same as old Unix init\footfullcite[Research Unix-style/BSD-style]{wiki-init}
+and so inherited the lack of features with respect to service management.
+
+
+\subsection{SysV init}
+SysV init added the concept of runlevels\footfullcite[SysV-Style]{wiki-init} and basic 
+service management\footfullcite{man-service}. A run level is a defined state that includes
+a set of services which have to be running (or have to not be running). Changing run level
+is a simple as stopping the serices that require stopping and starting the ones
+that are not running. The issue with SysV-style init is it's implementation and
+how basic the service managemnt is. It over uses symlinks in the file system to determin order,
+it uses PID files to keep track of processes. On top of this, the service managment is
+quite primitive.
+
+\subsection{BSD rc.d}
+It provides the main benefit of breaking up formerly monolithic rc into several
+init scripts. Unlike SysV init, it is configured centrally in a single (from the user
+perspective) file: rc.conf. It also features the \texttt{rcorder(8)} tool and can generally
+figure out itself what the right order to start services in is. Thus it avoids the most
+serious problems with SysV init. But it's somewhat limited;
+there is no service supervision, service status is not actually reliable and it's not helpful
+to get a full system overview. Parallelism is an afterthought and a somewhat recent feature
+addition.
+
+\subsection{OpenRC}
+Good: Introduces some convenience functions like rc-status. Was conceived with allowing
+for parallelism. It can work together with other programs to allow for service supervision.
+Bad: Picked up the SysV folly of service enabling via symlinks. It is still unreliable with
+service status. By itself it's not able to supervise services.
+
+\subsection{Upstart}
+Good: Compatibility with SysV init scripts. Asynchronous, event-driven nature. Service
+supervision. Bad: Hm! It's been a while\dots I don't remember off the top of my head what I
+disliked. Would need to look into it again.
+
+\subsection{Systemd}
+Good: Transition from init scripts to unit files. Service supervision. Bad: Braindead
+feature creep (for a PID 1 process!!). Very strange random defects (= unreliable). There's
+much more both for good and bad, but these are the main 4 points about systemd for me.
+
+\section{Proposal}
+\subsection{Aims}
+The aims of this project is to write a research init system. It will provide
+two things: A way to start services and a way to monitor and manage them.
+These componets have the following aims
+\begin{itemize}
+    \item To abstract away order and state from the system
+    \item To start the minimum possible number of services
+    \item To be as parallel as possible
+    \item To assist the user at every complexity level
+    \item To allow for maximum customisability
+    \item To be failsafe. If PID 1 crashes, \textit{hopefully}, it will not require a reboot.
+    \item To be POSIX complient as flexible with licencing as to not lock ourselves to a particular operating system
+\end{itemize}
+
+\subsection{Architecture}
+\subsection{Configuration Language}
+\subsection{Service Management Tool}
+
+\setlength{\baselineskip}{0pt} % JEM: Single-space References
+
+{\renewcommand*\MakeUppercase[1]{#1}%
+\printbibliography[heading=bibintoc,title={\bibtitle}]}
+
 \end{document}

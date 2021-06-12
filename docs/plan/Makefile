@@ -1,5 +1,5 @@
 TARGET:=Proposal.pdf
-SOURCE:=Proposal.pdf $(wildcard pages/*.tex)
+SOURCE:=Proposal.pdf $(wildcard pages/*.tex) Proposal.bib
 
 LATEX=xelatex
 
