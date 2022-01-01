@@ -20,23 +20,13 @@
 \setlength{\parskip}{1em}
 
 \section{Motivations}
-Proposing new init systems and service management systems in 2021 is surprisingly still a taboo
-topic. The space has seen little innovation since the controversially wide adoption of systemd
-in linux and I think, rather understandably, no one wants second init world war. But the
-war never really ended; more systemd gained control of vast amounts of territory and a cease
-fire was put in place. There still exists a minority who feel oppressed and jumped over to
-the BSDs to escape the creep of systemd. But this leaves the BSDs in a situation where,
-if they wanted to innovate their init system and service management, they would have
-to tried carefully to avoid emoting any PTSD in the refugees they got from linux. These
-small open source communities are too small to fragment and so an unspoken policy of 
-init-system complacency has been adopted.
+Proposing new init systems and service management systems in 2022 is surprisingly still a taboo topic. This space has seen little innovation since the controversially wide adoption of \texttt{systemd} in linux and I think, rather understandably, no one wants another\footnote{The systemd case may be what many people immediately think off as it kind of still rages on. It is however not the first fierce fight over init systems. In fact it feels a lot like the situation when the BSDs adopted \texttt{rc.d}. There have been fierce arguments including claims of this being "not the BSD way" and threads to fork the old init system and continue on with it! For some reason or another, people tend to be extremely touchy when it comes to their \texttt{init} - and probably rightfully so!} init world war. But the war never really ended; while \texttt{systemd} gained control of vast amounts of territory\footnote{Some people claim that this happened not due to technical superiority. There is some truth to that and especially in the fight over \textit{Debian} corporate actors (\textit{Red Hat} for \texttt{systemd} and \textit{Canonical} in favor of \texttt{upstart}) were not hard to spot. But it is also true that \texttt{systemd} \textit{does} provide a lot of value over \texttt{SysV init}.} and a kind of cease fire was put in place.
 
-But things are changing. DragonflyBSD has gone from a relatively unknown operating
-system to one that has started to out perform linux in benchmarks\footfullcite{dfbsd-phoronix}.
-One thing that systemd has shown us is that service management is key to speed and
-resource management and so it may be time to take another look at init systems and service
-management so that the BSDs have an up-to-date answer to the systemd problem and
-so that systemd has competition in it's domain.
+Despite having lost all the mainstream Linux distributions to systemd, enough people continue their resistance to make maintaining several alternative distributions feasible.\footnote{There are those like \textit{Slackware} which has used its BSD-inspired init system before  before \texttt{systemd} entered the stage and continues to do so. Other such examples are \textit{Gentoo} (by default) and \textit{Alpine Linux} which uses \texttt{openRC} and \textit{Void Linux} that adopted \texttt{runit}. There are however even new \textit{systemd-free} distributions which consider this an important feature. Notable xamples are the Debian fork \textit{Devuan} and the Arch Linux fork \textit{Artix}.} However there also exists a minority who still felt oppressed and jumped over to the BSDs to escape the creep of systemd. But this leaves the BSDs in a situation where, if they wanted to innovate their init system and service management, they would have to to try and carefully avoid emoting any PTSD in the refugees they got from Linux. These non-mainstream open source communities are likely too small to further fragment and remain viable\footnote{\textit{FreeBSD} as the by far largest player has seen several failed attempts of getting \texttt{openRC} into the base system. \textit{TrueOS}, a friendly fork that received corporate sponsorship has made completed the switch -- but it died not too long afterwards. \textit{GhostBSD}, a desktop-focused distribution of FreeBSD picked it up and maintained it for years but eventually even migrated back mainly because of the maintenance burden.}. Therefore an unspoken policy of init-system complacency has been adopted (i.e. it's regarded simple, well-known and for a lot use cases in fact \textit{good enough}).
+
+While some people argue that GNU/Linux is the only remaining Unix-like operating system that still matters, things are changing. The last couple of years have seen renewed interest in *BSD and an increase in newcomers. \textit{FreeBSD} is attractive to many due to its superb integration of ZFS, its proven jails system and many other features. \textit{OpenBSD} is relatively well known for its security-related innovations. \textit{NetBSD} is a little less visible, but people are also finding their way to it. And even \textit{Dragonfly BSD} has gone from a relatively unknown operating system to one that has started to out perform Linux in some benchmarks\footfullcite{dfbsd-phoronix}.
+
+However there are a few things that arguably hinder a renaissance of the BSD. One thing that \texttt{systemd} has shown is that proper service management is key to speed and effective resource management. Therefore it may be time to take another look at init systems and service management so that the BSDs can have an up-to-date answer to the systemd problem and so that systemd has competition in it's domain. There are a couple of candidates to potentially fill that gap. It makes sense to take a closer look at them first.
 
 \section{Other Software in the Domain}
 \subsection{Old Unix RC}
