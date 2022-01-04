@@ -122,6 +122,30 @@ We may explore disowning children processes. This has some limitations, but poss
 the daemon to fail without the system being rendered unusable.
 
 \subsection{Architecture}
+There will be two executables:
+\begin{itemize}
+  \item \texttt{utlosed}
+  \item \texttt{utloseadm}
+\end{itemize}
+Where \texttt{utlosed} will be the daemon that controls the starting and maintaining of services, and
+\texttt{utloseadm} which is the frontend to be used by both users and other applications.
+The two applications will be connected via ZeroMQ sockets. There will be request and reply sockets
+for control, but also publisher and subscribe sockets. These will be used for distributed logging and alarms.
+ZeroMQ is a good choice because of curveMQ. Encrypted sockets (to allow for distributed control)
+can be achieved with only minor changes to the code base.
+
+The messaging protocol is not decided yet, but it will be open. This will allow for third parties to easily
+write other frontends, or log collectors.
+
+\subsubsection{Logging and alarms}
+All output of the services will be redirected back to \texttt{utlosed} which will both write to a rotating log
+(configurable) and broadcast. The channel will be configurable, but the default will be: \texttt{logs/hostname/service}.
+This means that any logging client can filter for logs, logs from a specific host, and logs from a specific service on a specific
+host.
+
+Logs written to \texttt{stderr} (and crash reports detected by \texttt{utlosed}) will also be reported on \texttt{alarms/hostname/service}
+allowing for a service to listen specifically for things that are going wrong.
+
 \subsection{Configuration Language}
 \subsection{Service Management Tool}
 
