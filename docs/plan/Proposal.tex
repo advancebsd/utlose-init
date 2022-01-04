@@ -5,10 +5,12 @@
 \usepackage{minted}
 \setminted{autogobble}
 \newcommand*{\bibtitle}{Bibliography}
+\newenvironment{manpage}{\ttfamily}{\par}
+\usepackage{longtable}
 
 \addbibresource{Proposal.bib}
 
-\title{Init System Proposal\\ \large{For all posix complient systems}}
+\title{Init System Proposal\\ \large{For all POSIX complient systems}}
 \author{James Hobson and Michael Reim}
 
 \begin{document}
@@ -20,23 +22,175 @@
 \setlength{\parskip}{1em}
 
 \section{Motivations}
-Proposing new init systems and service management systems in 2022 is surprisingly still a taboo topic. This space has seen little innovation since the controversially wide adoption of \texttt{systemd} in linux and I think, rather understandably, no one wants another\footnote{The systemd case may be what many people immediately think off as it kind of still rages on. It is however not the first fierce fight over init systems. In fact it feels a lot like the situation when the BSDs adopted \texttt{rc.d}. There have been fierce arguments including claims of this being "not the BSD way" and threads to fork the old init system and continue on with it! For some reason or another, people tend to be extremely touchy when it comes to their \texttt{init} - and probably rightfully so!} init world war. But the war never really ended; while \texttt{systemd} gained control of vast amounts of territory\footnote{Some people claim that this happened not due to technical superiority. There is some truth to that and especially in the fight over \textit{Debian} corporate actors (\textit{Red Hat} for \texttt{systemd} and \textit{Canonical} in favor of \texttt{upstart}) were not hard to spot. But it is also true that \texttt{systemd} \textit{does} provide a lot of value over \texttt{SysV init}.} and a kind of cease fire was put in place.
+Proposing new init systems and service management systems in 2022 is surprisingly still a taboo topic.
+This space has seen little innovation since the controversially wide adoption of \texttt{systemd} in
+linux and I think, rather understandably, no one wants another\footnote{The systemd case may be what
+many people immediately think off as it kind of still rages on. It is however not the first fierce
+fight over init systems. In fact it feels a lot like the situation when the BSDs adopted \texttt{rc.d}.
+There have been fierce arguments including claims of this being "not the BSD way" and threads to fork
+the old init system and continue on with it! For some reason or another, people tend to be extremely
+touchy when it comes to their \texttt{init} - and probably rightfully so!} init world war. But the war
+never really ended; while \texttt{systemd} gained control of vast amounts of territory\footnote{Some
+people claim that this happened not due to technical superiority. There is some truth to that and
+especially in the fight over \textit{Debian} corporate actors (\textit{Red Hat} for \texttt{systemd}
+and \textit{Canonical} in favor of \texttt{upstart}) were not hard to spot. But it is also true that
+\texttt{systemd} \textit{does} provide a lot of value over \texttt{SysV init}.} and a kind of cease
+fire was put in place.
 
-Despite having lost all the mainstream Linux distributions to systemd, enough people continue their resistance to make maintaining several alternative distributions feasible.\footnote{There are those like \textit{Slackware} which has used its BSD-inspired init system before \texttt{systemd} entered the stage and continues to do so. Other such examples are \textit{Gentoo} (by default) and \textit{Alpine Linux} which uses \texttt{openRC} and \textit{Void Linux} that adopted \texttt{runit}. There are however even new \textit{systemd-free} distributions which consider this an important feature. Notable xamples are the Debian fork \textit{Devuan} and the Arch Linux fork \textit{Artix}.} However there also exists a minority who still felt oppressed and jumped over to the BSDs to escape the creep of systemd. But this leaves the BSDs in a situation where, if they wanted to innovate their init system and service management, they would have to to try and carefully avoid emoting any PTSD in the refugees they got from Linux. These non-mainstream open source communities are likely too small to further fragment and remain viable\footnote{\textit{FreeBSD} as the by far largest player has seen several failed attempts of getting \texttt{openRC} into the base system. \textit{TrueOS}, a friendly fork that received corporate sponsorship has made completed the switch -- but it died not too long afterwards. \textit{GhostBSD}, a desktop-focused distribution of FreeBSD picked it up and maintained it for years but eventually even migrated back mainly because of the maintenance burden.}. Therefore an unspoken policy of init-system complacency has been adopted (i.e. it's regarded simple, well-known and for a lot use cases in fact \textit{good enough}).
+Despite having lost all the mainstream Linux distributions to systemd, enough people continue their
+resistance to make maintaining several alternative distributions feasible.\footnote{There are those
+like \textit{Slackware} which has used its BSD-inspired init system before \texttt{systemd} entered the
+stage and continues to do so. Other such examples are \textit{Gentoo} (by default) and \textit{Alpine
+Linux} which uses \texttt{openRC} and \textit{Void Linux} that adopted \texttt{runit}. There are
+however even new \textit{systemd-free} distributions which consider this an important feature. Notable
+examples are the Debian fork \textit{Devuan} and the Arch Linux fork \textit{Artix}.} However there
+also exists a minority who still felt oppressed and jumped over to the BSDs to escape the creep of
+systemd. But this leaves the BSDs in a situation where, if they wanted to innovate their init system
+and service management, they would have to to try and carefully avoid emoting any PTSD in the refugees
+they got from Linux. These non-mainstream open source communities are likely too small to further
+fragment and remain viable\footnote{\textit{FreeBSD} as the by far largest player has seen several
+failed attempts of getting \texttt{openRC} into the base system. \textit{TrueOS}, a friendly fork that
+received corporate sponsorship has made completed the switch -- but it died not too long afterwards.
+\textit{GhostBSD}, a desktop-focused distribution of FreeBSD picked it up and maintained it for years
+but eventually even migrated back mainly because of the maintenance burden.}. Therefore an unspoken
+policy of init-system complacency has been adopted (i.e. it's regarded simple, well-known and for a lot
+use cases in fact \textit{good enough}).
 
-While some people argue that GNU/Linux is the only remaining Unix-like operating system that still matters, things are changing. The last couple of years have seen renewed interest in *BSD and an increase in newcomers. \textit{FreeBSD} is attractive to many due to its superb integration of ZFS, its proven jails system and many other features. \textit{OpenBSD} is relatively well known for its security-related innovations. \textit{NetBSD} is a little less visible, but people are also finding their way to it. And even \textit{Dragonfly BSD} has gone from a relatively unknown operating system to one that has started to out perform Linux in some benchmarks\footfullcite{dfbsd-phoronix}.
+While some people argue that GNU/Linux is the only remaining Unix-like operating system that still
+matters, things are changing. The last couple of years have seen renewed interest in *BSD and an
+increase in newcomers. \textit{FreeBSD} is attractive to many due to its superb integration of ZFS, its
+proven jails system and many other features. \textit{OpenBSD} is relatively well known for its
+security-related innovations. \textit{NetBSD} is a little less visible, but people are also finding
+their way to it. And even \textit{Dragonfly BSD} has gone from a relatively unknown operating system to
+one that has started to out perform Linux in some benchmarks\footfullcite{dfbsd-phoronix}.
 
-However there are a few things that arguably hinder a renaissance of the BSD. One thing that \texttt{systemd} has shown is that proper service management is key to speed and effective resource management. Therefore it may be time to take another look at init systems and service management so that the BSDs can have an up-to-date answer to the systemd problem and so that systemd has competition in it's domain. There are a couple of candidates to potentially fill that gap. It makes sense to take a closer look at them first.
+However there are a few things that arguably hinder a renaissance of the BSD. One thing that
+\texttt{systemd} has shown is that proper service management is key to speed and effective resource
+management. Therefore it may be time to take another look at init systems and service management so
+that the BSDs can have an up-to-date answer to the systemd problem and so that systemd has competition
+in it's domain. There are a couple of candidates to potentially fill that gap. It makes sense to take a
+closer look at them first.
 
 \section{Other Software in the Domain}
-\subsection{Old Unix RC}
+\subsection{Primordial Unix init}
 \nocite{unix-ii}
-The old unix RC was extremely primitive. A benefit to this approach is that it's very stable,
-but the completely lack of service management caused issues. Some software, such as
-appache HTTPd, came with management shell scripts\footfullcite{app-service}, but
-for those that didn't, your only option was to send the correct signal to the process
-via \texttt{kill}. For admins unfamiliar with this kind of management it's in fact easier to
-restart the whole machine after some service died than to figure out how to start it again!
+
+This init system, also known simply as \textit{init} was there even in the earliest editions of Research U\textsc{nix} but evolved over time.
+
+\subsubsection{Summary}
+The old U\textsc{nix} init is extremely primitive. A benefit to this approach is that it's easy to
+understand as well as very stable. But the complete lack of service management has made it obsolete for
+a very long time. Some software, such as Apache HTTPd, came with management shell
+scripts\footfullcite{app-service} for service management back in the day, but for programs that didn't,
+your only option was to send the correct signal to the process via \texttt{kill}. For admins unfamiliar
+with this kind of management it's in fact easier to restart the whole machine after some service died
+than to figure out how to start it again!
+
+\subsubsection{Details}
+
+In the original First Edition of Research U\textsc{nix}, init was a self-contained program that was
+responsible for all the tasks required to bring up the system. Since it is of high historical value, we
+replicate the information from the manual here. Keep in mind that the sections weren't what we're used
+to today and those sections were denoted in Roman numbers. Two other curious things are that the init
+binary used to be located in /etc and that originally there was no \textit{group} bit for file
+permissions.
+
+Here is the manual for init as of the First Edition\footnote{Taken from here: \url{https://www.tuhs.org/Archive/Distributions/Research/Dennis_v1/man71.pdf}}:\pagebreak
+
+\begin{manpage}
+	
+	\begin{longtable}{ll}
+		11/3/71 & \hspace{17em}/ETC/INIT (VII)\\\\
+		
+		NAME & init -- process initialization\\\\
+		
+		SYNOPSIS & --\\\\
+		
+		DESCRIPTION & \textit{init} is invoked inside UNIX as the last step in\\
+		& the boot procedure. It first carries out several\\
+		& housekeeping duties: it must change the modes of\\
+		& the tape files and the RK disk file to 17, be-\\
+		& cause if the system crashed while a \textit{tap} or \textit{rk}\\
+		& command was in progress, these files would be\\
+		& inaccessible; it also truncates the file\\
+		& /tmp/utmp, which contains a list of U\textsc{nix} users,\\
+		& again as a recovery measure in case of a crash.\\
+		& Directory \textit{usr} is assigned via \textit{sys} \textit{mount} as\\
+		& resident on the RK disk.\\\\
+		
+		& \textit{init} then forks several times so as to create one\\
+		& process for each typewriter channel on which a\\
+		& user may log in. Each process changes the mode\\
+		& of its typewriter to 15 (read/write owner,\\
+		& write-only non-owner; this guards against random\\
+		& users stealing input) and the owner to the\\
+		& super-user. Then the typewriter is opened for\\
+		& reading and writing. Since these opens are for\\
+		& the first files open in the process, they receive\\
+		& the file descriptors 0 and 1, the standard input\\
+		& and output file descriptors. It is likely that\\
+		& no one is dialled in when the read open takes\\
+		& place; therefore the process waits until someone\\
+		& calls. At this point, \textit{init} types its "login:"\\
+		& message and reads the response, which is looked\\
+		& up in the password file. The password file con-\\
+		& tains each user's name, password, numerical user\\
+		& ID, default working directory, and default shell.\\
+		& If the lookup is successful and the user can sup-\\
+		& ply his password, the owner of the typewriter is\\
+		& changed to the appropriate user ID. An entry is\\
+		& made in /tmp/utmp for this user to maintain an\\
+		& up-to-date list of users. Then the user ID of\\
+		& the process is changed appropriately, the current\\
+		& directpry is set, and the appropriate program to\\
+		& be used as the Shell is executed.\\\\
+		
+		& At some point the process will terminate, either\\
+		& because the login was successful but the user has\\
+		& now logged out, or because the login was unsuc-\\
+		& cessful. The parent routine of all the children\\
+		& of \textit{init} has meanwhile been waiting for such an\\
+		& event. When return takes place from the \textit{sys}\\
+		& \textit{wait}, \textit{init} simply forks again, and the child pro-\\
+		& cess again awaits a user.\\\\
+		
+		& There is a fine point involved in reading the\\
+		& login message. U\textsc{nix} is presently set up to han-\\
+		& dle automatically two types of terminals: 150\\
+		& baud, full duplex terminals with the line-feed\\
+		& function (typically, the Model 37 Teletype termi-\\
+		& nal), and 300 baud, full duplex terminals with\\
+		& only the line-space function (typically the GE\\
+		& TermiNet terminal). The latter type identifies\\
+		& itself by sending a line-break (long space) sig-\\
+		& nal at login time. Therefore, if a null charac-\\
+		& ter is received during reading of the login line,\\
+		& the typewriter mode is set to accommodate this\\
+		& terminal and the "login:" message is typed again\\
+		& (because it was garbled the first time).\\\\
+		
+		& \textit{Init}, upon first entry, checks the switches for\\
+		& 73700. If this combination is set, \textit{init} will\\
+		& open /dev/tty as standard input and output and\\
+		& directly execute /bin/sh. In this manner, U\textsc{nix}\\
+		& can be brought up with a minimum of hardware and\\
+		& software.\\\\
+		
+		FILES & /tmp/utmp, /dev/tty0 ... /dev/ttyn\\\\
+		
+		SEE ALSO & sh\\\\
+		
+		DIAGNOSTICS & "No directory", "No shell". There are also some\\
+		& halts if basic I/O files cannot be found in /dev.\\\\
+		
+		BUGS & --\\\\
+		
+		OWNER & ken, dmr
+	\end{longtable}
+
+\end{manpage}
+
+
 
 \subsection{BSD rc}
 BSD innovated by adding \texttt{rc.local}. This separated system init and user specified
