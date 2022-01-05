@@ -235,8 +235,8 @@ Good: Transition from init scripts to unit files. Service supervision. Bad: Brai
 feature creep (for a PID 1 process!!). Very strange random defects (= unreliable). There's
 much more both for good and bad, but these are the main 4 points about systemd for me.
 
-\section{Proposal}
-The aims of this project is to write a research init system. It will provide
+\section{Proposal for Utløse}
+The aims of this project is to write a research init system called Utløse. It will provide
 two things: A way to start services and a way to monitor and manage them.
 These components have the following aims
 \begin{itemize}
@@ -246,7 +246,9 @@ These components have the following aims
     \item To assist the user at every complexity level
     \item To allow for maximum customisability
     \item To be fail-safe. If PID 1 crashes, \textit{hopefully}, it will not require a reboot.
-    \item To be POSIX compliant as flexible with licensing as to not lock ourselves to a particular operating system
+    \item To be POSIX compliant and as flexible with licensing as to not lock ourselves to a particular operating system
+    \item To intergrate well into package managers
+    \item To allow for central monitoring and control for distributed systems
 \end{itemize}
 
 Unix has a long history of using programming language theory to solve problems. As soon as
@@ -274,6 +276,64 @@ We may explore disowning children processes. This has some limitations, but poss
 the daemon to fail without the system being rendered unusable.
 
 \subsection{Architecture}
+There will be two executables:
+\begin{itemize}
+  \item \texttt{utlosed}
+  \item \texttt{utloseadm}
+\end{itemize}
+Where \texttt{utlosed} will be the daemon that controls the starting and maintaining of services, and
+\texttt{utloseadm} which is the frontend to be used by both users and other applications.
+The two applications will be connected via ZeroMQ\footfullcite{zmq-home} sockets. There will be request and reply sockets
+for control, but also publisher and subscribe sockets. These will be used for distributed logging and alarms.
+ZeroMQ is a good choice because of curveZMQ\footfullcite{cmq-home}. Encrypted sockets (to allow for distributed control)
+can be achieved with only minor changes to the code base.
+
+The messaging protocol is not decided yet, but it will be open. This will allow for third parties to easily
+write other frontends, or log collectors.
+
+\subsubsection{Logging and alarms}
+All output of the services will be redirected back to \texttt{utlosed} which will both write to a rotating log
+(configurable) and broadcast. The channel will be configurable, but the default will be: \texttt{logs/hostname/service}.
+This means that any logging client can filter for logs, logs from a specific host, and logs from a specific service on a specific
+host.
+
+Logs written to \texttt{stderr} (and crash reports detected by \texttt{utlosed}) will also be reported on \texttt{alarms/hostname/service}
+allowing for a service to listen specifically for things that are going wrong.
+
+All logs currently held on disk may be requested via the request response socket interface. This allows remote clients to both
+respond to live events happening (via subscription), without having to be running 100\% of the time to get a full history.
+
+\subsubsection{Configuration}
+Configuration is split into three parts:
+\begin{enumerate}
+  \item Configuration of \texttt{utlosed}
+  \item Configuration of \texttt{utloseadm}
+  \item Configuration of the services.
+\end{enumerate}
+
+Configuration of the first two will be found in \texttt{/etc/utlose}, but service configuration can be split
+accross locations. This is to appease some package managers, which like to place everything in \texttt{/usr}
+
+By default, \texttt{utloseadm} will assume that it is monitoring a local instance of utlose. This can be changed
+by adding hosts to \texttt{/etc/utlose/utloseadm.toml}.
+
+The config for \texttt{utlosed} will be stored in \texttt{/etc/utlose/utlosed.toml}, and will be used to turn on or off features,
+change time outs and specify where the service files are located. This will also be where the default \textit{rule} is specified.
+
+There are a few approaches to service management config that could be appropriate. I imagine that a few will be supported and
+the one used will be configured in \texttt{/etc/utlose/utlosed.toml}
+
+\begin{itemize}
+  \item{Subvolume based upgrades: File Systems such as ZFS and BTRFS support snapshots of subvolumes. In this option, a snapshot is created
+    every time utløse successfully loads a new complete service configuration. If it fails, it goes through the snapshots until it finds one that
+    works.}
+  \item{Different locations: In this option, the package manager submits changes to Utløse which are accepted or rejected. The mechanism here would be
+    that the package manager puts a service file in some pre-agreed location and calls a subcommand of \texttt{utloseadm} to query the new service.
+    The query can be simple, such as ``Is this well formed?'' But more complicated queries can also be supported. If all the queries pass, the new service
+    files are included. If not, they are rejected and the package manager warned.}
+  \item{Nothing special: Keep it simple stupid! One location for service files.}
+\end{itemize}
+
 \subsection{Configuration Language}
 \subsection{Service Management Tool}
 
