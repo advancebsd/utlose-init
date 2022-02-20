@@ -421,16 +421,25 @@ The following things are configurable by a service:
       unix domain socket as the proxy}
   \item Sockets, same as socket but accepts a list of socket mappings as opposed to 1.
   \item gcTime, if the service is started lazily, kill it if no activity on the socket after the given time
+  \item {
+      version, takes either a path to a file containing the version, or a version number. When a user updates
+      a group of services and wants to restart 1 of them, Utløse can be told about version dependencies.
+      This allows utløse to restart all of the required services.
+    }
+  \item {timeout, how long to wait for service before giving up. (overrides default in \texttt{utlosed.toml})}
+  \item Restart, how long to wait before restarting. If not present, don't bother.
 \end{itemize}
 
 \begin{minted}{haskell}
   SomeTarget =>
     someService =>
-      needs [Network]
+      needs [Network, foo >= 0.3.2]
+      version = 1.2.1
       user    = "root"
       type    = SIMPLE
       socket  = 0.0.0.0:8080 -> /root/fun.sock
-      gcTime  = 1 day
+      gcTime  = 1 days
+      restart = 10 secs
       command = /usr/bin/funservice --listen-on /root/fun.sock
 \end{minted}
 
@@ -442,11 +451,13 @@ utløse is up to the programmer, as this is done through scripts:
 \begin{minted}{haskell}
   SomeTarget =>
     someService =>
-      needs [Network]
+      needs [Network, foo >= 0.4.0]
+      version = 1.2.2
       user    = "root"
       type    = SCRIPTED
       socket  = 0.0.0.0:8080 -> /root/fun.sock
-      gcTime  = 1 day
+      gcTime  = 1 days
+      restart = 10 secs
       command = 
        [/bin/bash |
           /usr/bin/funservice --listen-on /root/fun.sock &
@@ -482,6 +493,60 @@ Throttles may want to be inherited across interconnected instances. This can be 
 the \texttt{/etc/utlose/utlosed.toml} file.
 
 \subsection{Service Management Tool}
+Management is done via \texttt{utloseadm}. It has the following subcommands.
+
+\begin{itemize}
+  \item \texttt{start} - start service
+  \item \texttt{stop} - stop service
+  \item \texttt{restart} - restart service
+  \item \texttt{status} - query status
+  \item \texttt{logs} - logs for services
+  \item \texttt{lint} - generate errors and warnings
+  \item \texttt{snap} - save current service configuration for auto-rollback
+  \item \texttt{revert} - rollback
+  \item \texttt{enable} - enable a service at startup
+  \item \texttt{disable} - disable to the autostart of a service
+  \item \texttt{patch} - add a file to config. Lint it first. If successful, snap and then add it.
+  \item \texttt{query} - query properties about the service system e.g. timings, dependencies and more.
+\end{itemize}
+
+Most subcommands will have a \texttt{assert} and \texttt{check} option which can be provided with a
+precondition or post condition. It is not yet decided what the language will be for these conditions,
+but a pseudo example would be \texttt{utloseadm start --assert 'wicked down' NetworkManager}. This
+will check that the system hasn't got the wicked service running, before attempting to start NetworkManager.
+I imagine that this feature would only help packaging macro authors.
+
+\section{Configuration}
+Example:
+\begin{minted}{toml}
+  instance = "Name instance" # defaults to hostname
+  default_timeout = 3
+  service_files = ["/etc/utlose/services.utl"] # .utl.d folders are assumed. Order matters!
+  log_folder = "/var/log/utlose"
+  public_ip = "0.0.0.0:9000" # If not present, doesn't bind to any port
+  
+  # Permissions for interconnected instance parents
+  [permissions]
+  status = true
+  control = false
+  logs = true
+  # How many levels up can see this instance. 0 for all
+  visibility = 0 
+
+  [interconnects]
+  key = "XXXXXXXXXXXXXXX" # private key
+  resource_limits = ["net", "disk"] # Resources to share with children
+
+  # settings for connecting to children
+  [[child]]
+    key = "XXXXXXXXXXXXXXX" # public key
+    ip  = "0.0.0.0"
+
+  [[child]]
+    key = "XXXXXXXXXXXXXXX" # public key
+    ip  = "0.0.0.0"
+\end{minted}
+
 
 
 \setlength{\baselineskip}{0pt} % JEM: Single-space References
