@@ -523,7 +523,8 @@ Example:
   default_timeout = 3
   service_files = ["/etc/utlose/services.utl"] # .utl.d folders are assumed. Order matters!
   log_folder = "/var/log/utlose"
-  public_ip = "0.0.0.0:9000" # If not present, doesn't bind to any port
+  public_ip = "0.0.0.0" # If not present, doesn't bind to any port
+  public_port = 9000
   
   # Permissions for interconnected instance parents
   [permissions]
