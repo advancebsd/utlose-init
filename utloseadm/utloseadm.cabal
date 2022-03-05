@@ -25,10 +25,24 @@ executable utloseadm
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules:    CLI
+                      CLI.Types
+                      CLI.Commands
+                      CLI.Commands.Managment
+                      CLI.Commands.Status
+                      CLI.Commands.Logs
+                      CLI.Commands.Lint
+                      CLI.Commands.Snap
+                      CLI.Commands.Revert
+                      CLI.Commands.Boot
+                      CLI.Commands.Patch
+                      CLI.Commands.Query
+                      CLI.Commands.Enable
+                      CLI.Commands.Disable
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base ^>=4.14.3.0,
+                      optparse-applicative
     hs-source-dirs:   app
     default-language: Haskell2010
