@@ -1,7 +1,10 @@
 TARGET:=Proposal.pdf
-SOURCE:=Proposal.pdf $(wildcard pages/*.tex) Proposal.bib
+SOURCE:=$(wildcard *.tex) Proposal.bib
 
 LATEX=xelatex
+
+../../$(TARGET) : $(TARGET)
+	cp $^ $@
 
 $(TARGET) : $(SOURCE)
 
@@ -14,7 +17,7 @@ $(TARGET) : $(SOURCE)
 .PHONY: clean clean-all
 
 clean:
-	rm *.log *.aux *.bcf *.bbl *.toc *.xml *.blg
+	rm *.log *.aux *.bcf *.bbl *.toc *.xml *.blg || echo Done
 
 clean-all: clean
-	rm *.pdf
+	rm $(TARGET) ../../$(TARGET)
