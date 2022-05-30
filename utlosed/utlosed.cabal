@@ -1,7 +1,7 @@
-cabal-version:      3.0
+cabal-version:      2.4
 name:               utlosed
 version:            0.1.0.0
-synopsis:           Service Management Daemon
+synopsis:           Research init system for the BSDs
 
 -- A longer description of the package.
 -- description:
@@ -12,7 +12,7 @@ homepage:
 license:            BSD-3-Clause
 license-file:       LICENSE
 author:             James Hobson
-maintainer:         james.hobson@jotron.com
+maintainer:         james@hobson.space
 
 -- A copyright notice.
 -- copyright:
@@ -20,14 +20,19 @@ category:           System
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  MyLib
+    exposed-modules:  System.Utlose
+                      System.Utlose.Configuration
+                      System.Utlose.Configuration.Types
 
     -- Modules included in this library but not exported.
     -- other-modules:
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base < 5.0,
+                      ip,
+                      tomland,
+                      text
     hs-source-dirs:   lib
     default-language: Haskell2010
 
@@ -40,8 +45,10 @@ executable utlosed
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:
-        base ^>=4.14.3.0,
-        utlosed
+        base < 5.0,
+        utlosed,
+        mtl,
+        text
 
     hs-source-dirs:   app
     default-language: Haskell2010

@@ -5,4 +5,7 @@ Utløse is (going to be) a new init system that aims to be
 - Very safe
 - Easy to configure
 
-# Building
+## Whitepaper
+You can read the whitepaper [here](Proposal.pdf)
+
+## Building
